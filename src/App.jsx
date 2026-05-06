@@ -136,28 +136,7 @@ export default function HousieGenerator() {
           {current || "-"}
         </div>
 
-        {/* Last 5 */}
-        <h4>Last 5 Numbers</h4>
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-          {lastFive.map((num, index) => (
-            <div
-              key={index}
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                background: index === 0 ? theme.primary : theme.numberBox,
-                color: index === 0 ? "white" : theme.text,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-              }}
-            >
-              {num}
-            </div>
-          ))}
-        </div>
+       
 
         {/* Buttons */}
         <button
@@ -226,6 +205,29 @@ export default function HousieGenerator() {
             value={intervalTime}
             onChange={(e) => setIntervalTime(Number(e.target.value))}
           />
+        </div>
+
+         {/* Last 5 */}
+        <h4>Last 5 Numbers</h4>
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+          {lastFive.map((num, index) => (
+            <div
+              key={index}
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                background: index === 0 ? theme.primary : theme.numberBox,
+                color: index === 0 ? "white" : theme.text,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+              }}
+            >
+              {num}
+            </div>
+          ))}
         </div>
       </div>
 
