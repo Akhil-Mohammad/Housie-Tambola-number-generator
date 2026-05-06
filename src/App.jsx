@@ -10,35 +10,36 @@ export default function HousieGenerator() {
   const [intervalTime, setIntervalTime] = useState(3000);
   const [soundOn, setSoundOn] = useState(true);
 
+  // 🌙 Default dark mode + persistence
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    return saved ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("theme", JSON.stringify(darkMode));
+  }, [darkMode]);
+
   const intervalRef = useRef(null);
 
-  // 🎯 Derived last 5 numbers
+  const theme = {
+    background: darkMode ? "#0f172a" : "#ccd3e0",
+    card: darkMode ? "#1e293b" : "#ced5e9",
+    text: darkMode ? "#f1f5f9" : "#111827",
+    subText: darkMode ? "#94a3b8" : "#555",
+    primary: "#3b82f6",
+    numberBox: darkMode ? "#334155" : "#eef1f6",
+    shadow: darkMode
+      ? "0 4px 20px rgba(0,0,0,0.15)"
+      : "0 6px 20px rgba(0,0,0,0.20)",
+  };
+
   const lastFive = generated.slice(-5).reverse();
 
-  // 🎨 Reusable card style
-  const cardStyle = {
-    background: "#ffffff",
-    borderRadius: "16px",
-    padding: "20px",
-    boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
-  };
-
-  // 🔊 Format speech
-  const formatTambolaCall = (num) => {
-    const tens = Math.floor(num / 10);
-    const ones = num % 10;
-
-    if (num < 10) return `${num}`;
-    if (ones === 0) return `${num}`;
-
-    return `${tens} and ${ones}... ${num}`;
-  };
-
-  // 🔊 Speak
   const speakNumber = (num) => {
     if (!soundOn) return;
 
-    const msg = new SpeechSynthesisUtterance(formatTambolaCall(num));
+    const msg = new SpeechSynthesisUtterance(`${num}`);
     msg.rate = 0.85;
 
     const voices = window.speechSynthesis.getVoices();
@@ -48,7 +49,6 @@ export default function HousieGenerator() {
     window.speechSynthesis.speak(msg);
   };
 
-  // 🎲 Generate
   const generateNumber = () => {
     if (generated.length >= 90) return;
 
@@ -62,10 +62,8 @@ export default function HousieGenerator() {
     setTimeout(() => speakNumber(next), 300);
   };
 
-  // ▶️ Auto
   const startAutoPlay = () => {
     if (intervalRef.current) return;
-
     intervalRef.current = setInterval(generateNumber, intervalTime);
     setAutoPlay(true);
   };
@@ -94,35 +92,45 @@ export default function HousieGenerator() {
     window.speechSynthesis.cancel();
   };
 
+  const cardStyle = {
+    background: theme.card,
+    borderRadius: "16px",
+    padding: "20px",
+    boxShadow: theme.shadow,
+    color: theme.text,
+    transition: "all 0.3s ease",
+  };
+
   return (
     <div
       style={{
         display: "flex",
         gap: "30px",
         padding: "20px",
-        background: "#f5f7fb",
+        background: theme.background,
         minHeight: "100vh",
+        transition: "all 0.3s ease",
       }}
     >
       {/* LEFT CARD */}
       <div style={{ width: "300px", ...cardStyle, textAlign: "center" }}>
-        <h2 style={{ marginBottom: "10px" }}>Housie Generator</h2>
+        
 
-        <p>Current Number</p>
+        <p style={{ color: theme.subText }}>Current Number</p>
 
         <div
           style={{
-            width: "150px",
-            height: "150px",
+            width: "125px",
+            height: "125px",
             margin: "20px auto",
             borderRadius: "50%",
-            background: "#2f6fed",
+            background: theme.primary,
             color: "white",
             fontSize: "40px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 4px 10px rgba(47,111,237,0.4)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
           }}
         >
           {current || "-"}
@@ -138,8 +146,8 @@ export default function HousieGenerator() {
                 width: "40px",
                 height: "40px",
                 borderRadius: "50%",
-                background: index === 0 ? "#2f6fed" : "#444",
-                color: "white",
+                background: index === 0 ? theme.primary : theme.numberBox,
+                color: index === 0 ? "white" : theme.text,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -195,11 +203,10 @@ export default function HousieGenerator() {
           Reset
         </button>
 
-        <p style={{ marginTop: "10px" }}>
+        <p style={{ marginTop: "10px", color: theme.subText }}>
           Numbers Generated: {generated.length} / 90
         </p>
 
-        {/* Sound */}
         <label>
           <input
             type="checkbox"
@@ -209,7 +216,6 @@ export default function HousieGenerator() {
           Sound On
         </label>
 
-        {/* Speed */}
         <div style={{ marginTop: "15px" }}>
           <p>Speed: {intervalTime / 1000}s</p>
           <input
@@ -225,8 +231,36 @@ export default function HousieGenerator() {
 
       {/* RIGHT CARD */}
       <div style={{ flex: 1, ...cardStyle }}>
-        <h2 style={{ marginBottom: "15px" }}>All Numbers</h2>
+        
+        {/* HEADER (Title + Toggle) */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "15px",
+          }}
+        >
+          <h2 style={{ fontSize: "24px", fontWeight: "600" }}>
+          Housie/Tambola Number Generator
+          </h2>
 
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              background: darkMode ? "#d1deeb" : "#111",
+              color: darkMode ? "#111" : "#fff",
+            }}
+          >
+              {darkMode ? "Light Mode" : "Dark Mode"}
+          </button>
+        </div>
+
+        {/* GRID */}
         <div
           style={{
             display: "grid",
@@ -244,8 +278,10 @@ export default function HousieGenerator() {
                   padding: "12px",
                   textAlign: "center",
                   borderRadius: "10px",
-                  background: isSelected ? "#2f6fed" : "#eef1f6",
-                  color: isSelected ? "white" : "#333",
+                  background: isSelected
+                    ? theme.primary
+                    : theme.numberBox,
+                  color: isSelected ? "white" : theme.text,
                   fontWeight: "500",
                   transition: "all 0.2s ease",
                   transform: isSelected ? "scale(1.05)" : "scale(1)",
