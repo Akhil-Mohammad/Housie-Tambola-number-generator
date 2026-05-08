@@ -40,45 +40,92 @@ export default function NumberGenerator() {
 
   const lastFive = generated.slice(-5).reverse();
 
-  const speakNumber = (num) => {
+ const speakNumber = (num) => {
+
   if (!soundOn) return;
 
-  const digits = num
-    .toString()
-    .split("")
-    .join(" ");
+  // Stop previous speech
+  window.speechSynthesis.cancel();
 
-  const speechText = `${digits} ... ${num}`;
+  let speechText = "";
 
-  const msg = new SpeechSynthesisUtterance(speechText);
+  // For single digit numbers
+  if (num >= 1 && num <= 9) {
+
+    const words = [
+      "",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+    ];
+
+    speechText = `number ${words[num]}`;
+
+  } else {
+
+    // For 10 - 90
+    const digits = num
+      .toString()
+      .split("")
+      .join(" ");
+
+    speechText = `${digits} ... ${num}`;
+  }
+
+  const msg = new SpeechSynthesisUtterance(
+    speechText
+  );
 
   msg.rate = 0.75;
+
   msg.pitch = 1;
 
-  const voices = window.speechSynthesis.getVoices();
+  const voices =
+    window.speechSynthesis.getVoices();
 
   msg.voice =
     voices.find((v) => v.lang === "en-IN") ||
-    voices.find((v) => v.lang.startsWith("en")) ||
+    voices.find((v) =>
+      v.lang.startsWith("en")
+    ) ||
     voices[0];
-
-  window.speechSynthesis.cancel();
 
   window.speechSynthesis.speak(msg);
 };
 
+
   const generateNumber = () => {
-    if (generated.length >= 90) return;
 
-    const remaining = numbers.filter((n) => !generated.includes(n));
+  setGenerated((prev) => {
+
+    if (prev.length >= 90) return prev;
+
+    const remaining = numbers.filter(
+      (n) => !prev.includes(n)
+    );
+
+    if (remaining.length === 0) return prev;
+
     const next =
-      remaining[Math.floor(Math.random() * remaining.length)];
+      remaining[
+        Math.floor(
+          Math.random() * remaining.length
+        )
+      ];
 
-    setGenerated((prev) => [...prev, next]);
     setCurrent(next);
 
-    setTimeout(() => speakNumber(next), 300);
-  };
+    speakNumber(next);
+
+    return [...prev, next];
+  });
+};
 
   const startAutoPlay = () => {
     if (intervalRef.current) return;

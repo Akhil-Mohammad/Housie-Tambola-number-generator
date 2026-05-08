@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
@@ -137,6 +136,7 @@ export default function Home() {
               }}
             >
               <h3>1. Open On Multiple Devices</h3>
+
               <p style={{ color: "#cbd5e1" }}>
                 Open the same Tambola application link on multiple devices.
               </p>
@@ -150,6 +150,7 @@ export default function Home() {
               }}
             >
               <h3>2. Use One Device As Caller</h3>
+
               <p style={{ color: "#cbd5e1" }}>
                 Use one device as the Number Generator to generate and announce numbers.
               </p>
@@ -163,6 +164,7 @@ export default function Home() {
               }}
             >
               <h3>3. Use Other Devices For Tickets</h3>
+
               <p style={{ color: "#cbd5e1" }}>
                 Open the Tickets page on other devices and mark numbers as they are called.
               </p>
@@ -176,18 +178,59 @@ export default function Home() {
               }}
             >
               <h3>4. Win The Game</h3>
+
               <p style={{ color: "#cbd5e1" }}>
                 Complete rows or full house according to your Tambola game rules.
               </p>
             </div>
           </div>
         </div>
+
+        {/* FOOTER */}
+        <div
+          style={{
+            marginTop: "40px",
+            paddingTop: "20px",
+            borderTop: "1px solid #334155",
+            textAlign: "center",
+          }}
+        >
+          <h3
+            style={{
+              marginBottom: "10px",
+              color: "#f8fafc",
+            }}
+          >
+            Credits & Contact
+          </h3>
+
+          <p
+            style={{
+              color: "#94a3b8",
+              marginBottom: "8px",
+            }}
+          >
+            Developed by Akhil Mohammad
+          </p>
+
+          <p
+            style={{
+              color: "#94a3b8",
+              marginBottom: "8px",
+            }}
+          >
+            Tambola Multiplayer Web Application
+          </p>
+
+          <p
+            style={{
+              color: "#cbd5e1",
+            }}
+          >
+            Contact: akhilmohammad41@gmail.com
+          </p>
+        </div>
       </div>
     </div>
   );
 }
-
-
-
-
-
