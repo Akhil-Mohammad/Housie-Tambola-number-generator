@@ -1,12 +1,15 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Ticket() {
   const [tickets, setTickets] = useState([]);
   const [marked, setMarked] = useState([]);
   const [count, setCount] = useState(1);
   const [gameStarted, setGameStarted] = useState(false);
+  const navigate = useNavigate();
+const [loading, setLoading] = useState(false);
 
-  const shuffle = (arr) => {
+    const shuffle = (arr) => {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -95,14 +98,62 @@ export default function Ticket() {
 
     return ticket;
   };
+const generateTickets = async () => {
 
-  const generateTickets = () => {
+  setLoading(true);
+
+  setTimeout(() => {
+
+    const usedNumbers = new Set();
+
     const result = [];
-    for (let i = 0; i < count; i++) result.push(generateTicket());
+
+    const generateUniqueTicket = () => {
+
+      let ticket;
+
+      let valid = false;
+
+      while (!valid) {
+
+        ticket = generateTicket();
+
+        const nums = ticket
+          .flat()
+          .filter(Boolean);
+
+        const hasDuplicate = nums.some((n) =>
+          usedNumbers.has(n)
+        );
+
+        if (!hasDuplicate) {
+
+          nums.forEach((n) =>
+            usedNumbers.add(n)
+          );
+
+          valid = true;
+        }
+      }
+
+      return ticket;
+    };
+
+    for (let i = 0; i < count; i++) {
+
+      result.push(generateUniqueTicket());
+    }
+
     setTickets(result);
+
     setMarked([]);
+
     setGameStarted(true);
-  };
+
+    setLoading(false);
+
+  }, 500);
+};
 
   const toggleMark = (num) => {
     if (!num) return;
@@ -116,67 +167,243 @@ export default function Ticket() {
       const confirmReset = window.confirm(
         "Game is in progress. You will lose current tickets. Continue?"
       );
+
       if (!confirmReset) return;
     }
+
     setTickets([]);
     setMarked([]);
     setGameStarted(false);
   };
 
   return (
-    <div style={{ background: "#0f172a", minHeight: "100vh", padding: "30px", color: "white" }}>
-      <h2>Tambola Ticket</h2>
+    <div
+      style={{
+        background: "#0f172a",
+        minHeight: "100vh",
+        padding: "30px",
+        color: "white",
+        fontFamily: "sans-serif",
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          marginBottom: "30px",
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "38px",
+            fontWeight: "700",
+          }}
+        >
+          Tambola Tickets
+        </h1>
 
-      {!gameStarted && (
-        <div style={{ marginBottom: "15px" }}>
-          <label>Select Tickets: </label>
-          <select value={count} onChange={(e) => setCount(Number(e.target.value))}>
-            {[1, 2, 3, 4].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      <div style={{ marginBottom: "20px" }}>
-        <button onClick={generateTickets} disabled={gameStarted} style={{ marginRight: "10px" }}>
-          Generate Tickets
-        </button>
-        <button onClick={startNewGame}>Start New Game</button>
+        <p
+          style={{
+            color: "#94a3b8",
+            marginTop: "8px",
+          }}
+        >
+          Generate and play Tambola tickets
+        </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, auto)", gap: "30px" }}>
+      {/* ACTIONS */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "15px",
+          marginBottom: "30px",
+          flexWrap: "wrap",
+        }}
+      >
+       
+        {!gameStarted && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: "#1e293b",
+              padding: "10px 15px",
+              borderRadius: "10px",
+            }}
+          >
+            <span
+              style={{
+                color: "#cbd5e1",
+              }}
+            >
+              Tickets:
+            </span>
+
+            <select
+              value={count}
+              onChange={(e) =>
+                setCount(Number(e.target.value))
+              }
+              style={{
+                padding: "8px",
+                borderRadius: "8px",
+                border: "none",
+                background: "#0f172a",
+                color: "white",
+                fontSize: "15px",
+                outline: "none",
+              }}
+            >
+              {[1, 2, 3, 4].map((n) => (
+                <option
+                  key={n}
+                  value={n}
+                >
+                  {n}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+         <button
+          onClick={generateTickets}
+          disabled={gameStarted || loading}
+          style={{
+            padding: "12px 20px",
+            borderRadius: "10px",
+            border: "none",
+            background: gameStarted
+              ? "#475569"
+              : "#2563eb",
+            color: "white",
+            cursor: gameStarted
+              ? "not-allowed"
+              : "pointer",
+            fontWeight: "600",
+            transition: "0.3s",
+          }}
+        >
+          {loading ? "Generating Tickets..." : "Generate Tickets"}
+        </button>
+
+        <button
+          onClick={startNewGame}
+          style={{
+            padding: "12px 20px",
+            borderRadius: "10px",
+            border: "none",
+            background: "#dc2626",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: "600",
+          }}
+        >
+          Start New Game
+        </button>
+
+        <button
+  onClick={() => {
+    const confirmLeave = window.confirm(
+      "Current tickets will be lost. Go back to home?"
+    );
+
+    if (confirmLeave) {
+      navigate("/");
+    }
+  }}
+  style={{
+    padding: "12px 20px",
+    borderRadius: "10px",
+    border: "none",
+    background: "#334155",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: "600",
+    transition: "0.3s",
+  }}
+>
+  Back To Home
+</button>
+      </div>
+
+      
+
+      {/* TICKETS */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(2, 620px)",
+          gap: "20px",
+          justifyContent: "center",
+        }}
+      >
         {tickets.map((ticket, index) => (
-          <div key={index}>
-            <h4>Ticket {index + 1}</h4>
+          <div
+            key={index}
+            style={{
+              background: "#1e293b",
+              padding: "15px",
+              borderRadius: "18px",
+              boxShadow:
+                "0 8px 25px rgba(0,0,0,0.3)",
+            }}
+          >
+            <h3
+              style={{
+                marginBottom: "15px",
+                fontSize: "22px",
+              }}
+            >
+              Ticket {index + 1}
+            </h3>
+
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(9, 60px)",
-                gap: "4px",
-                background: "#000",
-                padding: "5px",
-                width: "fit-content",
+                gridTemplateColumns:
+                  "repeat(9, 1fr)",
+                gap: "6px",
               }}
             >
               {ticket.map((row, rIndex) =>
                 row.map((cell, cIndex) => {
-                  const isMarked = marked.includes(cell);
+                  const isMarked =
+                    marked.includes(cell);
+
                   return (
                     <div
                       key={`${rIndex}-${cIndex}`}
-                      onClick={() => toggleMark(cell)}
+                      onClick={() =>
+                        toggleMark(cell)
+                      }
                       style={{
-                        height: "50px",
-                        width: "60px",
+                        height: "45px",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        border: "1px solid #000",
-                        cursor: cell ? "pointer" : "default",
-                        background: cell ? (isMarked ? "green" : "#ffffff") : "#0f172a",
-                        color: cell ? "#000" : "transparent",
-                        fontWeight: "bold",
+                        justifyContent:
+                          "center",
+                        borderRadius: "10px",
+                        cursor: cell
+                          ? "pointer"
+                          : "default",
+                        background: cell
+                          ? isMarked
+                            ? "#22c55e"
+                            : "#f8fafc"
+                          : "#0f172a",
+                        color: cell
+                          ? "#111827"
+                          : "transparent",
+                        fontWeight: "700",
+                        fontSize: "16px",
+                        transition: "0.2s",
+                        border: cell
+                          ? "2px solid transparent"
+                          : "2px solid #1e293b",
                       }}
                     >
                       {cell ?? ""}

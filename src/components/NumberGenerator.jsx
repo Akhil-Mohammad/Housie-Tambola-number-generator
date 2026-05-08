@@ -41,17 +41,31 @@ export default function NumberGenerator() {
   const lastFive = generated.slice(-5).reverse();
 
   const speakNumber = (num) => {
-    if (!soundOn) return;
+  if (!soundOn) return;
 
-    const msg = new SpeechSynthesisUtterance(`${num}`);
-    msg.rate = 0.85;
+  const digits = num
+    .toString()
+    .split("")
+    .join(" ");
 
-    const voices = window.speechSynthesis.getVoices();
-    msg.voice = voices.find((v) => v.lang === "en-IN") || voices[0];
+  const speechText = `${digits} ... ${num}`;
 
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(msg);
-  };
+  const msg = new SpeechSynthesisUtterance(speechText);
+
+  msg.rate = 0.75;
+  msg.pitch = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+
+  msg.voice =
+    voices.find((v) => v.lang === "en-IN") ||
+    voices.find((v) => v.lang.startsWith("en")) ||
+    voices[0];
+
+  window.speechSynthesis.cancel();
+
+  window.speechSynthesis.speak(msg);
+};
 
   const generateNumber = () => {
     if (generated.length >= 90) return;
@@ -105,6 +119,53 @@ export default function NumberGenerator() {
     transition: "all 0.3s ease",
   };
 
+  const darkButtonStyle = {
+  padding: "10px 16px",
+  borderRadius: "8px",
+  border: "none",
+  cursor: "pointer",
+  background: "#1e293b",
+  color: "#ffffff",
+  transition: "all 0.3s ease",
+};
+
+const greenButtonStyle = {
+  width: "100%",
+  padding: "12px",
+  marginTop: "15px",
+  background: "green",
+  color: "white",
+  borderRadius: "8px",
+  border: "none",
+  cursor: "pointer",
+  transition: "all 0.3s ease",
+};
+
+const grayButtonStyle = {
+  width: "100%",
+  padding: "12px",
+  marginTop: "10px",
+  background: "#555",
+  color: "white",
+  borderRadius: "8px",
+  border: "none",
+  cursor: "pointer",
+  transition: "all 0.3s ease",
+};
+
+const redButtonStyle = {
+  width: "100%",
+  padding: "12px",
+  marginTop: "10px",
+  background: "red",
+  color: "white",
+  borderRadius: "8px",
+  border: "none",
+  cursor: "pointer",
+  transition: "all 0.3s ease",
+};
+
+
   return (
     <div
       style={{
@@ -143,48 +204,53 @@ export default function NumberGenerator() {
        
 
         {/* Buttons */}
-        <button
-          onClick={generateNumber}
-          disabled={autoPlay}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginTop: "15px",
-            background: "green",
-            color: "white",
-            borderRadius: "8px",
-          }}
-        >
-          Generate Number
-        </button>
+    <button
+  onClick={generateNumber}
+  disabled={autoPlay}
+  style={greenButtonStyle}
+  onMouseEnter={(e) => {
+    e.target.style.background = "#22c55e";
+    e.target.style.transform = "scale(1.02)";
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.background = "green";
+    e.target.style.transform = "scale(1)";
+  }}
+>
+  Generate Number
+</button>
 
-        <button
-          onClick={autoPlay ? stopAutoPlay : startAutoPlay}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginTop: "10px",
-            background: "#555",
-            color: "white",
-            borderRadius: "8px",
-          }}
-        >
-          {autoPlay ? "Pause Auto" : "Start Auto"}
-        </button>
+<button
+  onClick={autoPlay ? stopAutoPlay : startAutoPlay}
+  style={grayButtonStyle}
+  onMouseEnter={(e) => {
+    e.target.style.background = "#94a3b8";
+    e.target.style.color = "#111";
+    e.target.style.transform = "scale(1.02)";
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.background = "#555";
+    e.target.style.color = "#fff";
+    e.target.style.transform = "scale(1)";
+  }}
+>
+  {autoPlay ? "Pause Auto" : "Start Auto"}
+</button>
 
-        <button
-          onClick={resetGame}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginTop: "10px",
-            background: "red",
-            color: "white",
-            borderRadius: "8px",
-          }}
-        >
-          Reset
-        </button>
+<button
+  onClick={resetGame}
+  style={redButtonStyle}
+  onMouseEnter={(e) => {
+    e.target.style.background = "#f87171";
+    e.target.style.transform = "scale(1.02)";
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.background = "red";
+    e.target.style.transform = "scale(1)";
+  }}
+>
+  Reset
+</button>
 
         <p style={{ marginTop: "10px", color: theme.subText }}>
           Numbers Generated: {generated.length} / 90
@@ -239,36 +305,65 @@ export default function NumberGenerator() {
       <div style={{ flex: 1, ...cardStyle }}>
         
         {/* HEADER (Title + Toggle) */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "15px",
-          }}
-        >
-          <h2 style={{ fontSize: "24px", fontWeight: "600" }}>
-          Housie/Tambola Number Generator
-          </h2>
+   {/* HEADER (Title + Toggle) */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "15px",
+  }}
+>
+  <h2 style={{ fontSize: "24px", fontWeight: "600" }}>
+    Housie/Tambola Number Generator
+  </h2>
 
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+    }}
+  >
+    <button
+     onClick={() => {
+    const confirmLeave = window.confirm(
+      "You will lose numbers if you are in middle of the Game. Go back to home?"
+    );
 
-<button onClick={() => navigate("/ticket")}>
-Generate Ticket
-</button>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-              background: darkMode ? "#d1deeb" : "#111",
-              color: darkMode ? "#111" : "#fff",
-            }}
-          >
-              {darkMode ? "Light Mode" : "Dark Mode"}
-          </button>
-        </div>
+    if (confirmLeave) {
+      navigate("/");
+    }
+  }}
+      style={darkButtonStyle}
+      onMouseEnter={(e) => {
+        e.target.style.background = "#dbeafe";
+        e.target.style.color = "#111";
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.background = "#1e293b";
+        e.target.style.color = "#fff";
+      }}
+    >
+      Home
+    </button>
+
+    <button
+      onClick={() => setDarkMode(!darkMode)}
+      style={darkButtonStyle}
+      onMouseEnter={(e) => {
+        e.target.style.background = "#dbeafe";
+        e.target.style.color = "#111";
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.background = "#1e293b";
+        e.target.style.color = "#fff";
+      }}
+    >
+      {darkMode ? "Light Mode" : "Dark Mode"}
+    </button>
+  </div>
+</div>
 
         {/* GRID */}
         <div
