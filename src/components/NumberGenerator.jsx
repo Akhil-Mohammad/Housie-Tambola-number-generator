@@ -11,20 +11,32 @@ export default function NumberGenerator() {
   const [intervalTime, setIntervalTime] = useState(3000);
   const [soundOn, setSoundOn] = useState(true);
 
-  // 🌙 Default dark mode + persistence
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? JSON.parse(saved) : true;
   });
 
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
   useEffect(() => {
     localStorage.setItem("theme", JSON.stringify(darkMode));
   }, [darkMode]);
 
+  // RESPONSIVE RESIZE LISTENER
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () =>
+      window.removeEventListener("resize", handleResize);
+  }, []);
+
   const intervalRef = useRef(null);
 
   const navigate = useNavigate();
-
 
   const theme = {
     background: darkMode ? "#0f172a" : "#ccd3e0",
@@ -40,96 +52,76 @@ export default function NumberGenerator() {
 
   const lastFive = generated.slice(-5).reverse();
 
- const speakNumber = (num) => {
+  const speakNumber = (num) => {
+    if (!soundOn) return;
 
-  if (!soundOn) return;
+    window.speechSynthesis.cancel();
 
-  // Stop previous speech
-  window.speechSynthesis.cancel();
+    let speechText = "";
 
-  let speechText = "";
-
-  // For single digit numbers
-  if (num >= 1 && num <= 9) {
-
-    const words = [
-      "",
-      "one",
-      "two",
-      "three",
-      "four",
-      "five",
-      "six",
-      "seven",
-      "eight",
-      "nine",
-    ];
-
-    speechText = `number ${words[num]}`;
-
-  } else {
-
-    // For 10 - 90
-    const digits = num
-      .toString()
-      .split("")
-      .join(" ");
-
-    speechText = `${digits} ... ${num}`;
-  }
-
-  const msg = new SpeechSynthesisUtterance(
-    speechText
-  );
-
-  msg.rate = 0.75;
-
-  msg.pitch = 1;
-
-  const voices =
-    window.speechSynthesis.getVoices();
-
-  msg.voice =
-    voices.find((v) => v.lang === "en-IN") ||
-    voices.find((v) =>
-      v.lang.startsWith("en")
-    ) ||
-    voices[0];
-
-  window.speechSynthesis.speak(msg);
-};
-
-
-  const generateNumber = () => {
-
-  setGenerated((prev) => {
-
-    if (prev.length >= 90) return prev;
-
-    const remaining = numbers.filter(
-      (n) => !prev.includes(n)
-    );
-
-    if (remaining.length === 0) return prev;
-
-    const next =
-      remaining[
-        Math.floor(
-          Math.random() * remaining.length
-        )
+    if (num >= 1 && num <= 9) {
+      const words = [
+        "",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
       ];
 
-    setCurrent(next);
+      speechText = `number ${words[num]}`;
+    } else {
+      const digits = num
+        .toString()
+        .split("")
+        .join(" ");
 
-    speakNumber(next);
+      speechText = `${digits} ... ${num}`;
+    }
 
-    return [...prev, next];
-  });
-};
+    const msg = new SpeechSynthesisUtterance(speechText);
+
+    msg.rate = 0.75;
+    msg.pitch = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+
+    msg.voice =
+      voices.find((v) => v.lang === "en-IN") ||
+      voices.find((v) => v.lang.startsWith("en")) ||
+      voices[0];
+
+    window.speechSynthesis.speak(msg);
+  };
+
+  const generateNumber = () => {
+    setGenerated((prev) => {
+      if (prev.length >= 90) return prev;
+
+      const remaining = numbers.filter((n) => !prev.includes(n));
+
+      if (remaining.length === 0) return prev;
+
+      const next =
+        remaining[Math.floor(Math.random() * remaining.length)];
+
+      setCurrent(next);
+
+      speakNumber(next);
+
+      return [...prev, next];
+    });
+  };
 
   const startAutoPlay = () => {
     if (intervalRef.current) return;
+
     intervalRef.current = setInterval(generateNumber, intervalTime);
+
     setAutoPlay(true);
   };
 
@@ -167,78 +159,86 @@ export default function NumberGenerator() {
   };
 
   const darkButtonStyle = {
-  padding: "10px 16px",
-  borderRadius: "8px",
-  border: "none",
-  cursor: "pointer",
-  background: "#1e293b",
-  color: "#ffffff",
-  transition: "all 0.3s ease",
-};
+    padding: "10px 16px",
+    borderRadius: "8px",
+    border: "none",
+    cursor: "pointer",
+    background: "#1e293b",
+    color: "#ffffff",
+    transition: "all 0.3s ease",
+  };
 
-const greenButtonStyle = {
-  width: "100%",
-  padding: "12px",
-  marginTop: "15px",
-  background: "green",
-  color: "white",
-  borderRadius: "8px",
-  border: "none",
-  cursor: "pointer",
-  transition: "all 0.3s ease",
-};
+  const greenButtonStyle = {
+    width: "100%",
+    padding: "12px",
+    marginTop: "15px",
+    background: "green",
+    color: "white",
+    borderRadius: "8px",
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  };
 
-const grayButtonStyle = {
-  width: "100%",
-  padding: "12px",
-  marginTop: "10px",
-  background: "#555",
-  color: "white",
-  borderRadius: "8px",
-  border: "none",
-  cursor: "pointer",
-  transition: "all 0.3s ease",
-};
+  const grayButtonStyle = {
+    width: "100%",
+    padding: "12px",
+    marginTop: "10px",
+    background: "#555",
+    color: "white",
+    borderRadius: "8px",
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  };
 
-const redButtonStyle = {
-  width: "100%",
-  padding: "12px",
-  marginTop: "10px",
-  background: "red",
-  color: "white",
-  borderRadius: "8px",
-  border: "none",
-  cursor: "pointer",
-  transition: "all 0.3s ease",
-};
-
+  const redButtonStyle = {
+    width: "100%",
+    padding: "12px",
+    marginTop: "10px",
+    background: "red",
+    color: "white",
+    borderRadius: "8px",
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  };
 
   return (
     <div
       style={{
         display: "flex",
-        gap: "30px",
-        padding: "20px",
+        flexDirection: screenWidth < 900 ? "column" : "row",
+        gap: "20px",
+        padding: screenWidth < 600 ? "10px" : "20px",
         background: theme.background,
         minHeight: "100vh",
         transition: "all 0.3s ease",
+        overflowX: "hidden",
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
       {/* LEFT CARD */}
-      <div style={{ width: "300px", ...cardStyle, textAlign: "center" }}>
-        
-
+      <div
+        style={{
+          width: screenWidth < 900 ? "100%" : "300px",
+          ...cardStyle,
+          textAlign: "center",
+          boxSizing: "border-box",
+        }}
+      >
         <p style={{ color: theme.subText }}>Current Number</p>
 
         <div
           style={{
-            width: "125px",
-            height: "125px",
+            width: screenWidth < 600 ? "100px" : "125px",
+            height: screenWidth < 600 ? "100px" : "125px",
             margin: "20px auto",
             borderRadius: "50%",
             background: theme.primary,
             color: "white",
-            fontSize: "40px",
+            fontSize: screenWidth < 600 ? "32px" : "40px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -248,56 +248,53 @@ const redButtonStyle = {
           {current || "-"}
         </div>
 
-       
+        <button
+          onClick={generateNumber}
+          disabled={autoPlay}
+          style={greenButtonStyle}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#22c55e";
+            e.target.style.transform = "scale(1.02)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "green";
+            e.target.style.transform = "scale(1)";
+          }}
+        >
+          Generate Number
+        </button>
 
-        {/* Buttons */}
-    <button
-  onClick={generateNumber}
-  disabled={autoPlay}
-  style={greenButtonStyle}
-  onMouseEnter={(e) => {
-    e.target.style.background = "#22c55e";
-    e.target.style.transform = "scale(1.02)";
-  }}
-  onMouseLeave={(e) => {
-    e.target.style.background = "green";
-    e.target.style.transform = "scale(1)";
-  }}
->
-  Generate Number
-</button>
+        <button
+          onClick={autoPlay ? stopAutoPlay : startAutoPlay}
+          style={grayButtonStyle}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#94a3b8";
+            e.target.style.color = "#111";
+            e.target.style.transform = "scale(1.02)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "#555";
+            e.target.style.color = "#fff";
+            e.target.style.transform = "scale(1)";
+          }}
+        >
+          {autoPlay ? "Pause Auto" : "Start Auto"}
+        </button>
 
-<button
-  onClick={autoPlay ? stopAutoPlay : startAutoPlay}
-  style={grayButtonStyle}
-  onMouseEnter={(e) => {
-    e.target.style.background = "#94a3b8";
-    e.target.style.color = "#111";
-    e.target.style.transform = "scale(1.02)";
-  }}
-  onMouseLeave={(e) => {
-    e.target.style.background = "#555";
-    e.target.style.color = "#fff";
-    e.target.style.transform = "scale(1)";
-  }}
->
-  {autoPlay ? "Pause Auto" : "Start Auto"}
-</button>
-
-<button
-  onClick={resetGame}
-  style={redButtonStyle}
-  onMouseEnter={(e) => {
-    e.target.style.background = "#f87171";
-    e.target.style.transform = "scale(1.02)";
-  }}
-  onMouseLeave={(e) => {
-    e.target.style.background = "red";
-    e.target.style.transform = "scale(1)";
-  }}
->
-  Reset
-</button>
+        <button
+          onClick={resetGame}
+          style={redButtonStyle}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#f87171";
+            e.target.style.transform = "scale(1.02)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "red";
+            e.target.style.transform = "scale(1)";
+          }}
+        >
+          Reset
+        </button>
 
         <p style={{ marginTop: "10px", color: theme.subText }}>
           Numbers Generated: {generated.length} / 90
@@ -314,6 +311,7 @@ const redButtonStyle = {
 
         <div style={{ marginTop: "15px" }}>
           <p>Speed: {intervalTime / 1000}s</p>
+
           <input
             type="range"
             min="2000"
@@ -321,12 +319,20 @@ const redButtonStyle = {
             step="500"
             value={intervalTime}
             onChange={(e) => setIntervalTime(Number(e.target.value))}
+            style={{ width: "100%" }}
           />
         </div>
 
-         {/* Last 5 */}
         <h4>Last 5 Numbers</h4>
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
           {lastFive.map((num, index) => (
             <div
               key={index}
@@ -349,75 +355,102 @@ const redButtonStyle = {
       </div>
 
       {/* RIGHT CARD */}
-      <div style={{ flex: 1, ...cardStyle }}>
-        
-        {/* HEADER (Title + Toggle) */}
-   {/* HEADER (Title + Toggle) */}
-<div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "15px",
-  }}
->
-  <h2 style={{ fontSize: "24px", fontWeight: "600" }}>
-    Housie/Tambola Number Generator
-  </h2>
+      <div
+        style={{
+          flex: 1,
+          width: "100%",
+          maxWidth: "100%",
+          overflowX: "hidden",
+          boxSizing: "border-box",
+          ...cardStyle,
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: screenWidth < 700 ? "column" : "row",
+            justifyContent: "space-between",
+            alignItems:
+              screenWidth < 700 ? "flex-start" : "center",
+            gap: "15px",
+            marginBottom: "15px",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: screenWidth < 600 ? "18px" : "24px",
+              fontWeight: "600",
+            }}
+          >
+            Housie/Tambola Number Generator
+          </h2>
 
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-    }}
-  >
-    <button
-     onClick={() => {
-    const confirmLeave = window.confirm(
-      "You will lose numbers if you are in middle of the Game. Go back to home?"
-    );
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: "10px",
+              width: screenWidth < 700 ? "100%" : "auto",
+            }}
+          >
+            <button
+              onClick={() => {
+                const confirmLeave = window.confirm(
+                  "You will lose numbers if you are in middle of the Game. Go back to home?"
+                );
 
-    if (confirmLeave) {
-      navigate("/");
-    }
-  }}
-      style={darkButtonStyle}
-      onMouseEnter={(e) => {
-        e.target.style.background = "#dbeafe";
-        e.target.style.color = "#111";
-      }}
-      onMouseLeave={(e) => {
-        e.target.style.background = "#1e293b";
-        e.target.style.color = "#fff";
-      }}
-    >
-      Home
-    </button>
+                if (confirmLeave) {
+                  navigate("/");
+                }
+              }}
+              style={darkButtonStyle}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#dbeafe";
+                e.target.style.color = "#111";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "#1e293b";
+                e.target.style.color = "#fff";
+              }}
+            >
+              Home
+            </button>
 
-    <button
-      onClick={() => setDarkMode(!darkMode)}
-      style={darkButtonStyle}
-      onMouseEnter={(e) => {
-        e.target.style.background = "#dbeafe";
-        e.target.style.color = "#111";
-      }}
-      onMouseLeave={(e) => {
-        e.target.style.background = "#1e293b";
-        e.target.style.color = "#fff";
-      }}
-    >
-      {darkMode ? "Light Mode" : "Dark Mode"}
-    </button>
-  </div>
-</div>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              style={darkButtonStyle}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#dbeafe";
+                e.target.style.color = "#111";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "#1e293b";
+                e.target.style.color = "#fff";
+              }}
+            >
+              {darkMode ? "Light Mode" : "Dark Mode"}
+            </button>
+          </div>
+        </div>
 
         {/* GRID */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(10, 1fr)",
-            gap: "12px",
+
+            gridTemplateColumns:
+              screenWidth < 500
+                ? "repeat(4, 1fr)"
+                : screenWidth < 800
+                ? "repeat(6, 1fr)"
+                : "repeat(10, 1fr)",
+
+            gap: screenWidth < 600 ? "8px" : "12px",
+
+            width: "100%",
+            boxSizing: "border-box",
           }}
         >
           {numbers.map((num) => {
@@ -427,16 +460,31 @@ const redButtonStyle = {
               <div
                 key={num}
                 style={{
-                  padding: "12px",
+                  padding:
+                    screenWidth < 600 ? "10px" : "12px",
+
                   textAlign: "center",
-                  borderRadius: "10px",
+
+                  borderRadius:
+                    screenWidth < 600 ? "8px" : "10px",
+
                   background: isSelected
                     ? theme.primary
                     : theme.numberBox,
+
                   color: isSelected ? "white" : theme.text,
+
                   fontWeight: "500",
+
                   transition: "all 0.2s ease",
-                  transform: isSelected ? "scale(1.05)" : "scale(1)",
+
+                  transform: isSelected
+                    ? "scale(1.05)"
+                    : "scale(1)",
+
+                  boxSizing: "border-box",
+
+                  width: "100%",
                 }}
               >
                 {num}
