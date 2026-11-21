@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] {
+  --app-bg: #0b1120;
+  --glass: rgba(28, 42, 65, .68);
+  --glass-strong: rgba(35, 51, 77, .78);
+  --glass-border: rgba(255, 255, 255, .14);
+  --fg: #f8fafc;
+  --muted: #a8b5c8;
+  --shadow: 0 22px 60px rgba(0, 0, 0, .28);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --app-bg: #a5a9b1;
+  --glass: rgba(209, 206, 206, .62);
+  --glass-strong: rgba(248, 244, 244, .78);
+  --glass-border: rgba(255, 255, 255, .72);
+  --fg: #172033;
+  --muted: #5b687c;
+  --shadow: 0 22px 60px rgba(42, 58, 85, .13);
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(83, 132, 205, .28), transparent 34%),
+    radial-gradient(circle at 88% 90%, rgba(151, 110, 220, .18), transparent 32%),
+    var(--app-bg);
+  background-attachment: fixed;
+  color: var(--fg);
+  transition: background .25s, color .25s;
+}
+
+/* Main glass page */
+
+.glass-page {
+  color: var(--fg) !important;
+  background: transparent !important;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif !important;
+  position: relative;
+  isolation: isolate;
+}
+
+.glass-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(96, 165, 250, .12), transparent 28%),
+    radial-gradient(circle at 85% 80%, rgba(167, 139, 250, .12), transparent 30%);
+}
+
+/* General glass cards - removed broad ticket-page child selector */
+
+.glass-page .home-panel,
+.glass-page.number-generator-page > div,
+.glass-page .room-share-card {
+  background: var(--glass) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, .16) !important;
+  backdrop-filter: blur(26px) saturate(155%);
+  -webkit-backdrop-filter: blur(26px) saturate(155%);
+}
+
+/* Buttons */
+
+.glass-page button,
+.glass-page a {
+  border-radius: 12px;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+
+.glass-page button:not(:disabled):hover,
+.glass-page a:not(.share-disabled):hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+/* Inputs */
+
+.glass-page input:not([type="checkbox"]):not([type="range"]),
+.glass-page select {
+  background: var(--glass-strong) !important;
+  color: var(--fg) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(16px);
+}
+
+/* Text */
+
+.glass-page p {
+  color: var(--muted);
+}
+
+/* Global theme toggle */
+
+.global-theme-toggle {
+  position: fixed;
+  z-index: 9999;
+  top: 16px;
+  right: 18px;
+  padding: 10px 15px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-strong);
+  color: var(--fg);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+  font: 600 13px Inter, sans-serif;
+  cursor: pointer;
+}
+
+/* Room sharing card */
+
+.room-share-card {
+  margin: 12px 0 16px;
+  padding: 14px;
+  border-radius: 16px;
+  text-align: left;
+  color: var(--fg);
+}
+
+.room-share-card h3 {
+  margin: 0 0 6px;
+}
+
+.room-share-card p {
+  font-size: 12px;
+  margin: 6px 0 10px;
+}
+
+.room-share-link {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(127, 145, 170, .14);
+  border: 1px solid var(--glass-border);
+  color: var(--fg);
+}
+
+.room-share-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.room-share-actions button,
+.room-share-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(59, 130, 246, .82);
+  color: white;
+  text-decoration: none;
+  font-weight: 650;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.room-share-actions button:disabled,
+.room-share-actions .share-disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.room-share-card .share-lock-message {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.room-share-card .share-open-message {
+  color: #22c55e;
+  font-weight: 650;
+}
+
+/* Light theme */
+
+:root[data-theme="light"] .glass-page .home-panel {
+  color: var(--fg);
+}
+
+/* =========================================
+   TAMBOLA TICKET PAGE
+   ========================================= */
+
+/* Remove unwanted background from the ticket list wrapper.
+   Apply this class to the outer ticket-list container. */
+
+.glass-page .tambola-tickets-wrapper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+}
+
+/* Individual ticket cards */
+
+.glass-page .tambola-glass-card {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  box-shadow:
+    var(--shadow),
+    inset 0 2px 3px rgba(255, 255, 255, .25);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  padding: 24px;
+}
+
+/* Extra glossy effect in light mode */
+
+:root[data-theme="light"] .glass-page .tambola-glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(238, 235, 235, .82),
+    rgba(255, 255, 255, .42),
+    rgba(210, 228, 255, .48)
+  );
+  border: 1px solid rgba(255, 255, 255, .85);
+  box-shadow:
+    0 20px 50px rgba(42, 58, 85, .14),
+    inset 0 2px 4px rgba(255, 255, 255, .8);
+}
+
+/* Extra glossy effect in dark mode */
+
+:root[data-theme="dark"] .glass-page .tambola-glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(35, 51, 77, .85),
+    rgba(20, 33, 55, .72)
+  );
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .global-theme-toggle {
+    top: 10px;
+    right: 10px;
+    padding: 8px 12px;
+  }
+
+  .room-share-actions > * {
+    flex: 1;
+  }
+
+  .glass-page .tambola-glass-card {
+    padding: 16px;
+  }
+}
