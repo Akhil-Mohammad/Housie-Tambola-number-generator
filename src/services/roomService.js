@@ -1,511 +1,9 @@
-// import {
-//   ref,
-//   get,
-//   set,
-//   update,
-//   onValue,
-//   runTransaction,
-// } from "firebase/database";
-
-// import { db } from "../firebase";
-
-// // ======================================================
-// // FIREBASE CONFIGURATION
-// // ======================================================
-
-// console.log("========== ROOM SERVICE INITIALIZED ==========");
-
-// if (db) {
-//   console.log("Firebase initialized successfully.");
-//   console.log("Database URL:", db.app.options.databaseURL);
-//   console.log("Project ID:", db.app.options.projectId);
-// } else {
-//   console.error("Firebase database is not initialized.");
-// }
-
-// console.log("================================================");
-
-// // ======================================================
-// // NORMALIZE ROOM CODE
-// // ======================================================
-
-// export const normalizeRoomCode = (roomCode) => {
-//   return String(roomCode || "").trim();
-// };
-
-// // ======================================================
-// // CREATE ROOM
-// // ======================================================
-
-// export const createRoom = async (roomCode) => {
-//   try {
-//     console.log("========== CREATE ROOM STARTED ==========");
-
-//     const normalizedCode = normalizeRoomCode(roomCode);
-
-//     console.log("Room Code:", normalizedCode);
-
-//     if (!db) {
-//       throw new Error("Firebase database is not initialized.");
-//     }
-
-//     if (!/^\d{6}$/.test(normalizedCode)) {
-//       throw new Error("Invalid room code. Room code must be 6 digits.");
-//     }
-
-//     const roomRef = ref(db, `rooms/${normalizedCode}`);
-//     const snapshot = await get(roomRef);
-
-//     if (snapshot.exists()) {
-//       throw new Error("Room code already exists.");
-//     }
-
-//     const roomData = {
-//       roomCode: normalizedCode,
-//       roomActive: true,
-//       gameStarted: false,
-//       createdAt: Date.now(),
-//       generatedNumbers: [],
-//       currentNumber: null,
-//       players: {},
-//     };
-
-//     console.log("Creating room:", roomData);
-
-//     await set(roomRef, roomData);
-
-//     console.log("ROOM CREATED SUCCESSFULLY");
-
-//     return {
-//       success: true,
-//       roomCode: normalizedCode,
-//       data: roomData,
-//     };
-//   } catch (error) {
-//     console.error("CREATE ROOM FAILED:", error);
-//     throw error;
-//   }
-// };
-
-// // ======================================================
-// // GET ACTIVE ROOM
-// // ======================================================
-
-// export const getActiveRoom = async (roomCode) => {
-//   try {
-//     console.log("========== GET ACTIVE ROOM ==========");
-
-//     const normalizedCode = normalizeRoomCode(roomCode);
-
-//     console.log("Checking room:", normalizedCode);
-
-//     if (!db) {
-//       throw new Error("Firebase database is not initialized.");
-//     }
-
-//     const roomRef = ref(db, `rooms/${normalizedCode}`);
-//     const snapshot = await get(roomRef);
-
-//     console.log("Room Exists:", snapshot.exists());
-//     console.log("Room Data:", snapshot.val());
-
-//     if (!snapshot.exists()) {
-//       return null;
-//     }
-
-//     const roomData = snapshot.val();
-
-//     if (roomData.roomActive !== true) {
-//       console.warn("Room is inactive.");
-//       return null;
-//     }
-
-//     return roomData;
-//   } catch (error) {
-//     console.error("GET ACTIVE ROOM FAILED:", error);
-//     throw error;
-//   }
-// };
-
-// // ======================================================
-// // JOIN ROOM
-// // ======================================================
-
-// export const joinRoom = async (roomCode, playerName, playerId) => {
-//   try {
-//     console.log("========== JOIN ROOM STARTED ==========");
-
-//     const normalizedCode = normalizeRoomCode(roomCode);
-//     const normalizedName = String(playerName || "").trim();
-
-//     console.log("Entered Room Code:", roomCode);
-//     console.log("Normalized Room Code:", normalizedCode);
-//     console.log("Player Name:", normalizedName);
-//     console.log("Player ID:", playerId);
-
-//     if (!db) {
-//       throw new Error("Firebase database is not initialized.");
-//     }
-
-//     if (!/^\d{6}$/.test(normalizedCode)) {
-//       throw new Error("Please enter a valid 6-digit room code.");
-//     }
-
-//     if (!normalizedName) {
-//       throw new Error("Please enter your name.");
-//     }
-
-//     if (!playerId) {
-//       throw new Error("Player ID is missing.");
-//     }
-
-//     const roomPath = `rooms/${normalizedCode}`;
-//     const roomRef = ref(db, roomPath);
-
-//     console.log("Firebase Room Path:", roomPath);
-
-//     // Fetch room
-//     const roomSnapshot = await get(roomRef);
-
-//     console.log("Room Exists:", roomSnapshot.exists());
-//     console.log("Room Data:", roomSnapshot.val());
-
-//     if (!roomSnapshot.exists()) {
-//       throw new Error("Room code not found.");
-//     }
-
-//     const roomData = roomSnapshot.val();
-
-//     // Validate room
-//     if (roomData.roomActive !== true) {
-//       throw new Error("This room has been closed.");
-//     }
-
-//     if (roomData.gameStarted === true) {
-//       throw new Error("The game has already started.");
-//     }
-
-//     const existingPlayers = roomData.players || {};
-
-//     // Check existing player
-//     if (existingPlayers[playerId]) {
-//       console.log("Player already joined.");
-
-//       return {
-//         success: true,
-//         roomCode: normalizedCode,
-//         playerId,
-//         player: existingPlayers[playerId],
-//         alreadyJoined: true,
-//       };
-//     }
-
-//     // Add player
-//     const playerData = {
-//       name: normalizedName,
-//       joinedAt: Date.now(),
-//       ticketGenerated: false,
-//       ticketCount: 0,
-//     };
-
-//     const playerPath = `rooms/${normalizedCode}/players/${playerId}`;
-
-//     console.log("Adding player at:", playerPath);
-//     console.log("Player Data:", playerData);
-
-//     await set(ref(db, playerPath), playerData);
-
-//     // Verify
-//     const verifySnapshot = await get(ref(db, playerPath));
-
-//     if (!verifySnapshot.exists()) {
-//       throw new Error("Player could not be added to the room.");
-//     }
-
-//     console.log("PLAYER JOINED SUCCESSFULLY");
-//     console.log("Verified Player:", verifySnapshot.val());
-
-//     return {
-//       success: true,
-//       roomCode: normalizedCode,
-//       playerId,
-//       player: verifySnapshot.val(),
-//       alreadyJoined: false,
-//     };
-//   } catch (error) {
-//     console.error("========== JOIN ROOM FAILED ==========");
-//     console.error("Error Code:", error.code);
-//     console.error("Error Message:", error.message);
-//     console.error("Full Error:", error);
-
-//     throw error;
-//   }
-// };
-
-// // ======================================================
-// // SUBSCRIBE TO ROOM
-// // ======================================================
-
-// export const subscribeToRoom = (roomCode, callback) => {
-//   const normalizedCode = normalizeRoomCode(roomCode);
-
-//   console.log("========== ROOM SUBSCRIPTION ==========");
-//   console.log("Subscribing to:", `rooms/${normalizedCode}`);
-
-//   const roomRef = ref(db, `rooms/${normalizedCode}`);
-
-//   return onValue(
-//     roomRef,
-//     (snapshot) => {
-//       const roomData = snapshot.val();
-
-//       console.log("ROOM DATA UPDATED:", roomData);
-
-//       callback(roomData);
-//     },
-//     (error) => {
-//       console.error("ROOM SUBSCRIPTION FAILED:", error);
-//     }
-//   );
-// };
-
-// // ======================================================
-// // CLOSE ROOM
-// // ======================================================
-
-// export const closeRoom = async (roomCode) => {
-//   try {
-//     const normalizedCode = normalizeRoomCode(roomCode);
-
-//     console.log("========== CLOSE ROOM ==========");
-//     console.log("Room Code:", normalizedCode);
-
-//     await update(ref(db, `rooms/${normalizedCode}`), {
-//       roomActive: false,
-//     });
-
-//     console.log("ROOM CLOSED SUCCESSFULLY");
-//   } catch (error) {
-//     console.error("CLOSE ROOM FAILED:", error);
-//     throw error;
-//   }
-// };
-
-// // ======================================================
-// // PUBLISH NEXT NUMBER
-// // ======================================================
-
-// export const publishNextNumber = async (roomCode, requestedNumber = null) => {
-//   try {
-//     console.log("========== PUBLISH NEXT NUMBER STARTED ==========");
-
-//     const normalizedCode = normalizeRoomCode(roomCode);
-
-//     console.log("Room Code:", normalizedCode);
-//     console.log("Requested Number:", requestedNumber);
-
-//     if (!db) {
-//       throw new Error("Firebase database is not initialized.");
-//     }
-
-//     if (!normalizedCode) {
-//       throw new Error("Room code is missing.");
-//     }
-
-//     const roomRef = ref(db, `rooms/${normalizedCode}`);
-
-//     console.log("Starting Firebase transaction...");
-
-//     const result = await runTransaction(roomRef, (roomData) => {
-//       console.log("TRANSACTION CALLBACK EXECUTED");
-//       console.log("Current Room Data:", roomData);
-
-//       if (!roomData) {
-//         console.error("Room does not exist.");
-//         return;
-//       }
-
-//       if (roomData.roomActive !== true) {
-//         console.error("Room is inactive.");
-//         return;
-//       }
-
-//       if (roomData.gameStarted === false) {
-//         // The game may start with the first published number.
-//         console.log("Game is not started yet. Checking tickets...");
-//       }
-
-//       const players = roomData.players || {};
-//       const playerList = Object.values(players);
-
-//       if (playerList.length === 0) {
-//         console.error("No players have joined.");
-//         return;
-//       }
-
-//       const allTicketsGenerated = playerList.every(
-//         (player) =>
-//           player &&
-//           (
-//             player.ticketGenerated === true ||
-//             (Array.isArray(player.tickets) && player.tickets.length > 0)
-//           )
-//       );
-
-//       if (!allTicketsGenerated) {
-//         console.error("Not all players have generated tickets.");
-//         return;
-//       }
-
-//       const generatedNumbers = Array.isArray(roomData.generatedNumbers)
-//         ? roomData.generatedNumbers.map(Number)
-//         : [];
-
-//       console.log("Already Generated Numbers:", generatedNumbers);
-
-//       let nextNumber;
-
-//       // If a number is explicitly provided, validate it.
-//       if (requestedNumber !== null && requestedNumber !== undefined) {
-//         nextNumber = Number(requestedNumber);
-
-//         if (
-//           !Number.isInteger(nextNumber) ||
-//           nextNumber < 1 ||
-//           nextNumber > 90
-//         ) {
-//           console.error("Invalid requested number:", requestedNumber);
-//           return;
-//         }
-
-//         if (generatedNumbers.includes(nextNumber)) {
-//           console.error("Number already generated:", nextNumber);
-//           return;
-//         }
-//       } else {
-//         // Automatically select a remaining number.
-//         const remainingNumbers = Array.from(
-//           { length: 90 },
-//           (_, index) => index + 1
-//         ).filter((number) => !generatedNumbers.includes(number));
-
-//         console.log("Remaining Numbers:", remainingNumbers.length);
-
-//         if (remainingNumbers.length === 0) {
-//           console.error("All 90 numbers have been generated.");
-//           return;
-//         }
-
-//         const randomIndex = Math.floor(
-//           Math.random() * remainingNumbers.length
-//         );
-
-//         nextNumber = remainingNumbers[randomIndex];
-//       }
-
-//       console.log("Selected Tambola Number:", nextNumber);
-
-//       return {
-//         ...roomData,
-//         gameStarted: true,
-//         currentNumber: nextNumber,
-//         generatedNumbers: [...generatedNumbers, nextNumber],
-//       };
-//     });
-
-//     console.log("Transaction Committed:", result.committed);
-//     console.log("Final Transaction Data:", result.snapshot.val());
-
-//     if (!result.committed) {
-//       const latestData = result.snapshot.val();
-
-//       if (!latestData) {
-//         throw new Error("Room not found.");
-//       }
-
-//       if (latestData.roomActive !== true) {
-//         throw new Error("Room is inactive.");
-//       }
-
-//       if (Object.keys(latestData.players || {}).length === 0) {
-//         throw new Error("No players have joined this room.");
-//       }
-
-//       const allTicketsGenerated = Object.values(
-//         latestData.players || {}
-//       ).every(
-//         (player) =>
-//           player &&
-//           (
-//             player.ticketGenerated === true ||
-//             (Array.isArray(player.tickets) && player.tickets.length > 0)
-//           )
-//       );
-
-//       if (!allTicketsGenerated) {
-//         throw new Error("Waiting for all players to generate their tickets.");
-//       }
-
-//       if ((latestData.generatedNumbers || []).length >= 90) {
-//         throw new Error("All 90 Tambola numbers have been generated.");
-//       }
-
-//       throw new Error("Unable to publish the next number. Please try again.");
-//     }
-
-//     const publishedNumber = result.snapshot.val().currentNumber;
-
-//     console.log("NUMBER PUBLISHED SUCCESSFULLY:", publishedNumber);
-//     console.log("========== PUBLISH NEXT NUMBER COMPLETED ==========");
-
-//     return publishedNumber;
-//   } catch (error) {
-//     console.error("========== PUBLISH NUMBER FAILED ==========");
-//     console.error("Error Code:", error.code);
-//     console.error("Error Message:", error.message);
-//     console.error("Full Error:", error);
-
-//     throw error;
-//   }
-// };
-
-// // ======================================================
-// // RESET ROOM NUMBERS
-// // ======================================================
-
-// export const resetRoomNumbers = async (roomCode) => {
-//   try {
-//     const normalizedCode = normalizeRoomCode(roomCode);
-
-//     console.log("========== RESET ROOM NUMBERS ==========");
-//     console.log("Room Code:", normalizedCode);
-
-//     const roomRef = ref(db, `rooms/${normalizedCode}`);
-
-//     await update(roomRef, {
-//       generatedNumbers: [],
-//       currentNumber: null,
-//       gameStarted: false,
-//     });
-
-//     console.log("ROOM NUMBERS RESET SUCCESSFULLY");
-
-//     return true;
-//   } catch (error) {
-//     console.error("RESET ROOM FAILED:", error);
-//     throw error;
-//   }
-// };
-
-
 import {
   ref,
   get,
   set,
   update,
   onValue,
-  push,
-  remove,
   runTransaction,
 } from "firebase/database";
 
@@ -520,7 +18,6 @@ function requireDatabase() {
 
   if (!db) {
     console.error("Firebase database is NULL.");
-
     throw new Error(
       "Firebase is not configured. Check your .env file."
     );
@@ -529,7 +26,6 @@ function requireDatabase() {
   console.log("Firebase initialized successfully.");
   console.log("Database URL:", db.app.options.databaseURL);
   console.log("Project ID:", db.app.options.projectId);
-
   console.log("=============================================");
 }
 
@@ -539,6 +35,15 @@ function requireDatabase() {
 
 const ROOM_CODE_LENGTH = 6;
 const ROOM_CODE_CHARS = "0123456789";
+
+const PRIZE_DEFINITIONS = {
+  jaldi5: { label: "Jaldi 5", type: "jaldi5" },
+  firstLine: { label: "First Line", type: "row", rowIndex: 0 },
+  secondLine: { label: "Second Line", type: "row", rowIndex: 1 },
+  lastLine: { label: "Last Line", type: "row", rowIndex: 2 },
+};
+
+const REQUIRED_PRIZES = Object.keys(PRIZE_DEFINITIONS);
 
 // ======================================================
 // NORMALIZE ROOM CODE
@@ -565,9 +70,19 @@ function makeRoomCode() {
   ).join("");
 }
 
-// =====================================================
+// ======================================================
+// CHECK GAME COMPLETION
+// ======================================================
+
+function areAllPrizesClaimed(claims = {}) {
+  return REQUIRED_PRIZES.every(
+    (prizeKey) => Boolean(claims[prizeKey])
+  );
+}
+
+// ======================================================
 // CREATE ROOM
-// =====================================================
+// ======================================================
 
 export async function createRoom() {
   console.log("\n========== CREATE ROOM STARTED ==========");
@@ -586,7 +101,6 @@ export async function createRoom() {
       const result = await runTransaction(
         roomRef,
         (currentRoom) => {
-          // Do not overwrite an existing room.
           if (currentRoom !== null) {
             return;
           }
@@ -595,22 +109,22 @@ export async function createRoom() {
             roomCode,
             roomActive: true,
             gameStarted: false,
+            gameCompleted: false,
             createdAt: Date.now(),
             generatedNumbers: [],
             currentNumber: null,
             players: {},
+            claims: {},
           };
         }
       );
-
-      console.log("Transaction Committed:", result.committed);
 
       if (result.committed) {
         console.log("ROOM CREATED SUCCESSFULLY:", roomCode);
 
         return {
           success: true,
-          roomCode: roomCode,
+          roomCode,
           data: result.snapshot.val(),
         };
       }
@@ -622,9 +136,6 @@ export async function createRoom() {
 
   } catch (error) {
     console.error("CREATE ROOM FAILED:", error);
-    console.error("Error Code:", error.code);
-    console.error("Error Message:", error.message);
-
     throw error;
   }
 }
@@ -682,20 +193,25 @@ export async function joinRoom(roomCode, playerName, playerId) {
     const name = String(playerName || "").trim();
 
     if (normalized.length !== ROOM_CODE_LENGTH) {
-      throw new Error("Room code must contain exactly 6 digits.");
+      throw new Error(
+        "Room code must contain exactly 6 digits."
+      );
     }
 
     if (!name) {
-      throw new Error("Enter your name before joining.");
+      throw new Error(
+        "Enter your name before joining."
+      );
     }
 
     if (!playerId) {
-      throw new Error("Player ID is missing. Please try again.");
+      throw new Error(
+        "Player ID is missing. Please try again."
+      );
     }
 
     const roomRef = ref(db, `rooms/${normalized}`);
 
-    // 1. Read room
     const roomSnapshot = await get(roomRef);
 
     if (!roomSnapshot.exists()) {
@@ -704,24 +220,27 @@ export async function joinRoom(roomCode, playerName, playerId) {
 
     const room = roomSnapshot.val();
 
-    console.log("ROOM FOUND:", room);
-
-    // 2. Validate room
     if (room.roomActive !== true) {
       throw new Error("This room is closed.");
     }
 
-    if (room.gameStarted === true) {
-      throw new Error("The game has already started.");
+    if (
+      room.gameStarted === true ||
+      room.gameCompleted === true
+    ) {
+      throw new Error(
+        "The game has already started. New joins are closed."
+      );
     }
 
     const players = room.players || {};
 
     if (players[playerId]) {
-      throw new Error("You have already joined this room.");
+      throw new Error(
+        "You have already joined this room."
+      );
     }
 
-    // 3. Add player
     const playerRef = ref(
       db,
       `rooms/${normalized}/players/${playerId}`
@@ -736,9 +255,11 @@ export async function joinRoom(roomCode, playerName, playerId) {
       dropped: false,
     });
 
-    console.log("PLAYER JOINED SUCCESSFULLY:", playerId);
+    console.log(
+      "PLAYER JOINED SUCCESSFULLY:",
+      playerId
+    );
 
-    // 4. Read updated room
     const updatedSnapshot = await get(roomRef);
 
     return {
@@ -748,17 +269,19 @@ export async function joinRoom(roomCode, playerName, playerId) {
 
   } catch (error) {
     console.error("JOIN ROOM FAILED:", error);
-    console.error("ERROR CODE:", error.code);
-    console.error("ERROR MESSAGE:", error.message);
-
     throw error;
   }
 }
+
 // ======================================================
 // SUBSCRIBE TO ROOM
 // ======================================================
 
-export function subscribeToRoom(roomCode, callback, onError) {
+export function subscribeToRoom(
+  roomCode,
+  callback,
+  onError
+) {
   requireDatabase();
 
   const normalized = normalizeRoomCode(roomCode);
@@ -772,7 +295,10 @@ export function subscribeToRoom(roomCode, callback, onError) {
     },
 
     (error) => {
-      console.error("ROOM SUBSCRIPTION FAILED:", error);
+      console.error(
+        "ROOM SUBSCRIPTION FAILED:",
+        error
+      );
 
       if (onError) {
         onError(error);
@@ -822,7 +348,9 @@ export async function dropPlayer(roomCode, playerId) {
     const current = result.snapshot.val();
 
     if (!current) {
-      throw new Error("Player record was not found.");
+      throw new Error(
+        "Player record was not found."
+      );
     }
   }
 
@@ -839,10 +367,13 @@ export async function closeRoom(roomCode) {
   try {
     const normalized = normalizeRoomCode(roomCode);
 
-    await update(ref(db, `rooms/${normalized}`), {
-      roomActive: false,
-      closedAt: Date.now(),
-    });
+    await update(
+      ref(db, `rooms/${normalized}`),
+      {
+        roomActive: false,
+        closedAt: Date.now(),
+      }
+    );
 
     console.log("ROOM CLOSED SUCCESSFULLY.");
 
@@ -866,11 +397,17 @@ export async function publishNextNumber(roomCode) {
     const result = await runTransaction(
       roomRef,
       (room) => {
-        if (!room || room.roomActive !== true) {
+        if (
+          !room ||
+          room.roomActive !== true ||
+          room.gameCompleted === true
+        ) {
           return;
         }
 
-        const generated = Array.isArray(room.generatedNumbers)
+        const generated = Array.isArray(
+          room.generatedNumbers
+        )
           ? room.generatedNumbers
           : [];
 
@@ -878,10 +415,10 @@ export async function publishNextNumber(roomCode) {
           return;
         }
 
-        // Only validate players before the game starts.
         if (room.gameStarted !== true) {
           const players =
-            room.players && typeof room.players === "object"
+            room.players &&
+            typeof room.players === "object"
               ? Object.values(room.players)
               : [];
 
@@ -893,14 +430,13 @@ export async function publishNextNumber(roomCode) {
               !player.droppedAt
           );
 
-          // Minimum 2 active players required.
           if (activePlayers.length < 2) {
             return;
           }
 
-          // Every active player must generate a ticket.
           const pendingPlayers = activePlayers.filter(
-            (player) => player.ticketGenerated !== true
+            (player) =>
+              player.ticketGenerated !== true
           );
 
           if (pendingPlayers.length > 0) {
@@ -921,14 +457,17 @@ export async function publishNextNumber(roomCode) {
 
         const selectedNumber =
           remainingNumbers[
-            Math.floor(Math.random() * remainingNumbers.length)
+            Math.floor(
+              Math.random() * remainingNumbers.length
+            )
           ];
 
         return {
           ...room,
 
           gameStarted: true,
-          gameStartedAt: room.gameStartedAt || Date.now(),
+          gameStartedAt:
+            room.gameStartedAt || Date.now(),
 
           generatedNumbers: [
             ...generated,
@@ -947,13 +486,20 @@ export async function publishNextNumber(roomCode) {
         throw new Error("Room not found.");
       }
 
+      if (currentRoom.gameCompleted === true) {
+        throw new Error(
+          "Game completed! All prizes have been claimed."
+        );
+      }
+
       if (currentRoom.roomActive !== true) {
         throw new Error("This room is closed.");
       }
 
       if (currentRoom.gameStarted !== true) {
         const players =
-          currentRoom.players && typeof currentRoom.players === "object"
+          currentRoom.players &&
+          typeof currentRoom.players === "object"
             ? Object.values(currentRoom.players)
             : [];
 
@@ -972,12 +518,16 @@ export async function publishNextNumber(roomCode) {
         }
 
         const pendingPlayers = activePlayers.filter(
-          (player) => player.ticketGenerated !== true
+          (player) =>
+            player.ticketGenerated !== true
         );
 
         if (pendingPlayers.length > 0) {
           const pendingNames = pendingPlayers
-            .map((player) => player.name || "Unknown Player")
+            .map(
+              (player) =>
+                player.name || "Unknown Player"
+            )
             .join(", ");
 
           throw new Error(
@@ -989,14 +539,21 @@ export async function publishNextNumber(roomCode) {
       return null;
     }
 
-    const selectedNumber = result.snapshot.val().currentNumber;
+    const selectedNumber =
+      result.snapshot.val().currentNumber;
 
-    console.log("NUMBER PUBLISHED:", selectedNumber);
+    console.log(
+      "NUMBER PUBLISHED:",
+      selectedNumber
+    );
 
     return selectedNumber;
 
   } catch (error) {
-    console.error("PUBLISH NUMBER FAILED:", error);
+    console.error(
+      "PUBLISH NUMBER FAILED:",
+      error
+    );
     throw error;
   }
 }
@@ -1011,15 +568,339 @@ export async function resetRoomNumbers(roomCode) {
   try {
     const normalized = normalizeRoomCode(roomCode);
 
-    await update(ref(db, `rooms/${normalized}`), {
-      generatedNumbers: [],
-      currentNumber: null,
-    });
+    await update(
+      ref(db, `rooms/${normalized}`),
+      {
+        generatedNumbers: [],
+        currentNumber: null,
+        claims: {},
+        gameStarted: false,
+        gameStartedAt: null,
+        gameCompleted: false,
+        gameCompletedAt: null,
+      }
+    );
 
-    console.log("ROOM NUMBERS RESET SUCCESSFULLY.");
+    console.log(
+      "ROOM NUMBERS AND CLAIMS RESET SUCCESSFULLY."
+    );
 
   } catch (error) {
     console.error("RESET ROOM FAILED:", error);
     throw error;
   }
+}
+
+// ======================================================
+// NORMALIZE TICKET DATA
+// ======================================================
+
+function toIndexedArray(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+
+  const keys = Object.keys(value);
+
+  if (
+    !keys.length ||
+    !keys.every((key) => /^\d+$/.test(key))
+  ) {
+    return [];
+  }
+
+  const maxIndex = Math.max(
+    ...keys.map(Number)
+  );
+
+  return Array.from(
+    { length: maxIndex + 1 },
+    (_, index) => value[index] ?? ""
+  );
+}
+
+function toValidNumber(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const number = Number(value);
+
+  return Number.isInteger(number) &&
+    number >= 1 &&
+    number <= 90
+    ? number
+    : null;
+}
+
+function normalizeTicket(ticket) {
+  const rows = toIndexedArray(ticket);
+
+  if (rows.length !== 3) {
+    return null;
+  }
+
+  const normalizedRows = rows.map((row) => {
+    const cells = toIndexedArray(row);
+
+    if (cells.length !== 9) {
+      return null;
+    }
+
+    return cells.map(toValidNumber);
+  });
+
+  if (normalizedRows.some((row) => !row)) {
+    return null;
+  }
+
+  if (
+    normalizedRows.some(
+      (row) =>
+        row.filter(
+          (cell) => cell !== null
+        ).length !== 5
+    )
+  ) {
+    return null;
+  }
+
+  return normalizedRows;
+}
+
+// ======================================================
+// CLAIM PRIZE
+// ======================================================
+
+export async function claimPrize(
+  roomCode,
+  playerId,
+  prizeKey
+) {
+  requireDatabase();
+
+  const normalized = normalizeRoomCode(roomCode);
+  const prize = PRIZE_DEFINITIONS[prizeKey];
+
+  if (normalized.length !== ROOM_CODE_LENGTH) {
+    throw new Error(
+      "Room code must contain exactly 6 digits."
+    );
+  }
+
+  if (!playerId) {
+    throw new Error("Player ID is missing.");
+  }
+
+  if (!prize) {
+    throw new Error("Invalid prize selected.");
+  }
+
+  const roomRef = ref(
+    db,
+    `rooms/${normalized}`
+  );
+
+  let failureMessage = "";
+
+  const result = await runTransaction(
+    roomRef,
+    (room) => {
+      failureMessage = "";
+
+      if (
+        !room ||
+        room.roomActive !== true
+      ) {
+        failureMessage =
+          "This room is unavailable.";
+        return;
+      }
+
+      if (room.gameCompleted === true) {
+        failureMessage =
+          "The game has already been completed.";
+        return;
+      }
+
+      const player =
+        room.players &&
+        room.players[playerId];
+
+      if (
+        !player ||
+        player.status === "dropped" ||
+        player.dropped === true ||
+        player.droppedAt
+      ) {
+        failureMessage =
+          "Your player session is not active in this room.";
+        return;
+      }
+
+      const rawTickets = toIndexedArray(
+        player.tickets
+      );
+
+      const tickets = rawTickets
+        .map(normalizeTicket)
+        .filter(Boolean);
+
+      if (!tickets.length) {
+        failureMessage =
+          "No valid ticket was found for your player.";
+        return;
+      }
+
+      const calledValues = toIndexedArray(
+        room.generatedNumbers
+      );
+
+      const called = new Set(
+        calledValues
+          .map(toValidNumber)
+          .filter(
+            (number) => number !== null
+          )
+      );
+
+      if (!called.size) {
+        failureMessage =
+          "No numbers have been called yet.";
+        return;
+      }
+
+      const existingClaims =
+        room.claims &&
+        typeof room.claims === "object"
+          ? room.claims
+          : {};
+
+      const alreadyClaimed =
+        existingClaims[prizeKey];
+
+      if (alreadyClaimed) {
+        failureMessage =
+          `${prize.label} has already been claimed by ${
+            alreadyClaimed.playerName ||
+            "another player"
+          }.`;
+        return;
+      }
+
+      let winningTicketIndex = -1;
+
+      for (
+        let ticketIndex = 0;
+        ticketIndex < tickets.length;
+        ticketIndex += 1
+      ) {
+        const ticket = tickets[ticketIndex];
+
+        let qualifies = false;
+
+        if (prize.type === "jaldi5") {
+          const matchedCount = ticket
+            .flat()
+            .filter(
+              (number) =>
+                number !== null &&
+                called.has(number)
+            ).length;
+
+          qualifies = matchedCount >= 5;
+
+        } else {
+          const row =
+            ticket[prize.rowIndex];
+
+          const rowNumbers = row.filter(
+            (number) => number !== null
+          );
+
+          qualifies =
+            rowNumbers.length === 5 &&
+            rowNumbers.every(
+              (number) => called.has(number)
+            );
+        }
+
+        if (qualifies) {
+          winningTicketIndex = ticketIndex;
+          break;
+        }
+      }
+
+      if (winningTicketIndex < 0) {
+        failureMessage =
+          `Your ticket does not qualify for ${prize.label} yet.`;
+        return;
+      }
+
+      const updatedClaims = {
+        ...existingClaims,
+
+        [prizeKey]: {
+          prizeKey,
+          prizeName: prize.label,
+          playerId,
+          playerName:
+            player.name ||
+            player.playerName ||
+            "Player",
+          ticketIndex: winningTicketIndex,
+          claimedAt: Date.now(),
+          status: "approved",
+        },
+      };
+
+      const gameCompleted =
+        areAllPrizesClaimed(updatedClaims);
+
+      return {
+        ...room,
+
+        claims: updatedClaims,
+
+        gameCompleted,
+
+        gameCompletedAt: gameCompleted
+          ? room.gameCompletedAt || Date.now()
+          : null,
+      };
+    }
+  );
+
+  if (!result.committed) {
+    throw new Error(
+      failureMessage ||
+      "The claim could not be submitted. Please try again."
+    );
+  }
+
+  const updatedRoom = result.snapshot.val();
+
+  console.log(
+    "PRIZE CLAIM SUCCESSFUL:",
+    prize.label
+  );
+
+  if (updatedRoom.gameCompleted) {
+    console.log(
+      "GAME COMPLETED! ALL PRIZES HAVE BEEN CLAIMED."
+    );
+  }
+
+  return {
+    ...updatedRoom.claims[prizeKey],
+    gameCompleted: updatedRoom.gameCompleted === true,
+  };
 }
